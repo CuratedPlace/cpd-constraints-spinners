@@ -1115,23 +1115,16 @@ document.getElementById("new-team-input").addEventListener("keydown", e => {
 
 // Reset current team's results
 document.getElementById("copy-results-quick-btn").addEventListener("click", () => {
-  const lines = [];
-  sessions.forEach(sess => {
-    if (!Object.keys(sess.results).length) return;
-    lines.push(`[ ${sess.name} ]`);
-    cfg.spinners.forEach((sp, i) => {
-      lines.push(`${sp.title}: ${sess.results[i] || '—'}`);
-    });
-    lines.push('');
-  });
-  if (!lines.length) return;
-  const text = lines.join('\n');
-  const btn  = document.getElementById("copy-results-quick-btn");
+  const text = buildResultsText();
+  if (!text) return;
+  const btn = document.getElementById("copy-results-quick-btn");
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
       btn.textContent = '✓ Copied!';
-      setTimeout(() => { btn.textContent = '⎘ Copy for Miro'; }, 2000);
-    }).catch(() => { btn.textContent = 'Open Results to copy'; setTimeout(() => { btn.textContent = '⎘ Copy for Miro'; }, 2500); });
+      setTimeout(() => { btn.innerHTML = '&#x2398; Copy for Miro'; }, 2000);
+    }).catch(() => {
+      document.getElementById("results-btn").click();
+    });
   } else {
     document.getElementById("results-btn").click();
   }
@@ -1166,34 +1159,21 @@ document.getElementById("results-close").addEventListener("click", () =>
   document.getElementById("results-overlay").classList.add("hidden")
 );
 
-document.getElementById("copy-results-btn").addEventListener("click", () => {
+// Shared function — always reads fresh from sessions, handles both numeric and string keys
+function buildResultsText() {
   const lines = [];
-  sessions.forEach(sess => {
-    if (!Object.keys(sess.results).length) return;
+  for (const sess of sessions) {
+    const hasAny = cfg.spinners.some((_, i) => sess.results[i] !== undefined || sess.results[String(i)] !== undefined);
+    if (!hasAny) continue;
     lines.push(`[ ${sess.name} ]`);
     cfg.spinners.forEach((sp, i) => {
-      lines.push(`${sp.title}: ${sess.results[i] || '—'}`);
+      const val = sess.results[i] !== undefined ? sess.results[i] : (sess.results[String(i)] || null);
+      lines.push(`${sp.title}: ${val || '—'}`);
     });
     lines.push('');
-  });
-  if (!lines.length) return;
-  const text = lines.join('\n');
-  const btn  = document.getElementById("copy-results-btn");
-  const box  = document.getElementById("copy-results-box");
-  const hint = document.getElementById("copy-results-hint");
-
-  // Try clipboard API first; fall back to visible textarea
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = '✓ Copied!';
-      box.style.display = 'none';
-      hint.style.display = 'none';
-      setTimeout(() => { btn.textContent = '⎘ Copy Results for Miro'; }, 2000);
-    }).catch(() => showFallback(text, box, hint));
-  } else {
-    showFallback(text, box, hint);
   }
-});
+  return lines.join('\n');
+}
 
 function showFallback(text, box, hint) {
   box.value = text;
@@ -1202,6 +1182,24 @@ function showFallback(text, box, hint) {
   box.focus();
   box.select();
 }
+
+document.getElementById("copy-results-btn").addEventListener("click", () => {
+  const text = buildResultsText();
+  const btn  = document.getElementById("copy-results-btn");
+  const box  = document.getElementById("copy-results-box");
+  const hint = document.getElementById("copy-results-hint");
+  if (!text.trim()) { showFallback('No results yet.', box, hint); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ Copied!';
+      box.style.display = 'none';
+      hint.style.display = 'none';
+      setTimeout(() => { btn.innerHTML = '&#x2398; Copy Results for Miro'; }, 2000);
+    }).catch(() => showFallback(text, box, hint));
+  } else {
+    showFallback(text, box, hint);
+  }
+});
 document.getElementById("results-overlay").addEventListener("click", e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.add("hidden");
 });
