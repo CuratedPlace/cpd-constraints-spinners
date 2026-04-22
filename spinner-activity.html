@@ -391,7 +391,10 @@
   <div class="modal modal-wide">
     <div class="modal-head">
       <h2>Session Results</h2>
-      <button class="modal-close" id="results-close">&#10005;</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-outline btn-sm" id="copy-results-btn">&#x2398; Copy for Miro</button>
+        <button class="modal-close" id="results-close">&#10005;</button>
+      </div>
     </div>
     <div id="results-body"></div>
   </div>
@@ -1131,6 +1134,25 @@ document.getElementById("results-btn").addEventListener("click", () => {
 document.getElementById("results-close").addEventListener("click", () =>
   document.getElementById("results-overlay").classList.add("hidden")
 );
+
+document.getElementById("copy-results-btn").addEventListener("click", () => {
+  const lines = [];
+  sessions.forEach(sess => {
+    if (!Object.keys(sess.results).length) return;
+    lines.push(`[ ${sess.name} ]`);
+    cfg.spinners.forEach((sp, i) => {
+      const val = sess.results[i];
+      lines.push(`${sp.title}: ${val || '—'}`);
+    });
+    lines.push('');
+  });
+  if (!lines.length) return;
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const btn = document.getElementById("copy-results-btn");
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = '⎘ Copy for Miro'; }, 2000);
+  });
+});
 document.getElementById("results-overlay").addEventListener("click", e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.add("hidden");
 });
