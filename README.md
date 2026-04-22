@@ -58,7 +58,7 @@ Add an **Embed** widget to your board and paste the GitHub Pages URL. The spinne
 **Option A (recommended):** Add a **Code Block** to your page and paste this, replacing the URL with your own:
 
 ```html
-<iframe src="https://your-username.github.io/spinner-activity/spinner-activity.html"
+<iframe src="https://curatedplace.github.io/cpd-constraints-spinners/spinner-activity.html"
         width="100%" height="900" frameborder="0" style="border:none"></iframe>
 ```
 
@@ -69,7 +69,7 @@ Add an **Embed** widget to your board and paste the GitHub Pages URL. The spinne
 Embed as an iframe pointing to the GitHub Pages URL:
 
 ```html
-<iframe src="https://your-username.github.io/spinner-activity/spinner-activity.html"
+<iframe src="https://curatedplace.github.io/cpd-constraints-spinners/spinner-activity.html"
         width="100%" height="900" frameborder="0" style="border:none"></iframe>
 ```
 
