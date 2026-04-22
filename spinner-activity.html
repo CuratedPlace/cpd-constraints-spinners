@@ -1116,18 +1116,8 @@ document.getElementById("new-team-input").addEventListener("keydown", e => {
 // Reset current team's results
 document.getElementById("copy-results-quick-btn").addEventListener("click", () => {
   const text = buildResultsText();
-  if (!text) return;
-  const btn = document.getElementById("copy-results-quick-btn");
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = '✓ Copied!';
-      setTimeout(() => { btn.innerHTML = '&#x2398; Copy for Miro'; }, 2000);
-    }).catch(() => {
-      document.getElementById("results-btn").click();
-    });
-  } else {
-    document.getElementById("results-btn").click();
-  }
+  if (!text.trim()) return;
+  copyToClipboard(text, document.getElementById("copy-results-quick-btn"), '&#x2398; Copy for Miro');
 });
 
 document.getElementById("reset-session-btn").addEventListener("click", () => {
@@ -1159,15 +1149,15 @@ document.getElementById("results-close").addEventListener("click", () =>
   document.getElementById("results-overlay").classList.add("hidden")
 );
 
-// Shared function — always reads fresh from sessions, handles both numeric and string keys
+// Always reads fresh from sessions — handles both numeric and string keys
 function buildResultsText() {
   const lines = [];
   for (const sess of sessions) {
-    const hasAny = cfg.spinners.some((_, i) => sess.results[i] !== undefined || sess.results[String(i)] !== undefined);
+    const hasAny = cfg.spinners.some((_, i) => sess.results[i] != null || sess.results[String(i)] != null);
     if (!hasAny) continue;
     lines.push(`[ ${sess.name} ]`);
     cfg.spinners.forEach((sp, i) => {
-      const val = sess.results[i] !== undefined ? sess.results[i] : (sess.results[String(i)] || null);
+      const val = sess.results[i] != null ? sess.results[i] : (sess.results[String(i)] || null);
       lines.push(`${sp.title}: ${val || '—'}`);
     });
     lines.push('');
@@ -1175,30 +1165,47 @@ function buildResultsText() {
   return lines.join('\n');
 }
 
-function showFallback(text, box, hint) {
-  box.value = text;
-  box.style.display = 'block';
-  hint.style.display = 'block';
-  box.focus();
-  box.select();
+// Single-click copy: modern API → execCommand fallback → visible textarea
+function copyToClipboard(text, btnEl, origLabel) {
+  const confirm = () => {
+    if (!btnEl) return;
+    btnEl.textContent = '✓ Copied!';
+    setTimeout(() => { btnEl.innerHTML = origLabel; }, 2000);
+  };
+  const execFallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { document.execCommand('copy'); confirm(); }
+    catch (_) { showCopyBox(text); }
+    finally { document.body.removeChild(ta); }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(confirm).catch(execFallback);
+  } else {
+    execFallback();
+  }
+}
+
+// Last resort: show pre-selected textarea inside results modal
+function showCopyBox(text) {
+  document.getElementById("results-overlay").classList.remove("hidden");
+  renderResults();
+  const box  = document.getElementById("copy-results-box");
+  const hint = document.getElementById("copy-results-hint");
+  box.value = text; box.style.display = 'block'; hint.style.display = 'block';
+  box.focus(); box.select();
 }
 
 document.getElementById("copy-results-btn").addEventListener("click", () => {
   const text = buildResultsText();
-  const btn  = document.getElementById("copy-results-btn");
   const box  = document.getElementById("copy-results-box");
   const hint = document.getElementById("copy-results-hint");
-  if (!text.trim()) { showFallback('No results yet.', box, hint); return; }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = '✓ Copied!';
-      box.style.display = 'none';
-      hint.style.display = 'none';
-      setTimeout(() => { btn.innerHTML = '&#x2398; Copy Results for Miro'; }, 2000);
-    }).catch(() => showFallback(text, box, hint));
-  } else {
-    showFallback(text, box, hint);
-  }
+  box.style.display = 'none'; hint.style.display = 'none';
+  if (!text.trim()) { box.value = 'No results yet — spin some wheels first!'; box.style.display = 'block'; return; }
+  copyToClipboard(text, document.getElementById("copy-results-btn"), '&#x2398; Copy Results for Miro');
 });
 document.getElementById("results-overlay").addEventListener("click", e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.add("hidden");
