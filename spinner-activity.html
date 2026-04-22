@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Working With Constraints</title>
+<style>
+  :root {
+    --bg:       #ffffff;
+    --surface:  #f4f5f7;
+    --surface2: #e8eaed;
+    --border:   rgba(0,0,0,0.12);
+    --text:     #1a1a2e;
+    --muted:    rgba(26,26,46,0.45);
+    --accent:   #e8451e;
+    --radius:   10px;
+    --font:     'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ─────────────────────────────────── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .header h1 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+
+  /* ── SESSION BAR ─────────────────────────────── */
+  .session-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .session-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--muted);
+    margin-right: 2px;
+  }
+  .session-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+  .session-tab {
+    padding: 4px 10px 4px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font);
+    transition: background 0.15s, border-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .session-tab:hover { background: rgba(0,0,0,0.06); }
+  .session-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab-rename-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.7rem;
+    opacity: 0;
+    padding: 0;
+    line-height: 1;
+    color: inherit;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+  }
+  .session-tab:hover .tab-rename-btn,
+  .session-tab.active .tab-rename-btn { opacity: 0.55; }
+  .tab-rename-btn:hover { opacity: 1 !important; }
+  .session-bar-right { margin-left: auto; display: flex; gap: 6px; }
+
+  /* ── BUTTONS ─────────────────────────────────── */
+  .btn {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: var(--font);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: 0.82; }
+  .btn:active { transform: scale(0.96); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-accent  { background: var(--accent); color: #fff; }
+  .btn-green   { background: #1a7a4a; color: #fff; }
+  .btn-ghost   { background: rgba(0,0,0,0.07); color: var(--text); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-danger  { background: #c0392b; color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+
+  /* ── MAIN LAYOUT ─────────────────────────────── */
+  .main { padding: 16px 20px 32px; max-width: 1120px; margin: 0 auto; }
+  .spin-all-row { display: flex; justify-content: center; padding: 12px 0 16px; }
+
+  /* ── SPINNER GRID ────────────────────────────── */
+  .spinners-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 680px) { .spinners-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 440px) { .spinners-grid { grid-template-columns: 1fr; } }
+
+  /* ── SPINNER CARD ────────────────────────────── */
+  .spinner-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 10px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    transition: border-color 0.25s;
+  }
+  .spinner-card.done { border-color: rgba(232,69,30,0.35); }
+  .spinner-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+  .canvas-wrap {
+    width: 400px;
+    height: 400px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .canvas-wrap canvas { display: block; }
+
+  .result-box {
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    background: rgba(0,0,0,0.05);
+    color: var(--muted);
+    text-align: center;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s, color 0.3s, border 0.3s;
+    border: 1px solid transparent;
+  }
+  .result-box.done {
+    background: rgba(232,69,30,0.1);
+    color: var(--text);
+    border-color: rgba(232,69,30,0.4);
+    font-weight: 700;
+  }
+
+  /* ── MODALS ──────────────────────────────────── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    padding: 16px;
+  }
+  .overlay.hidden { display: none; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px;
+    max-width: 960px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-head h2 { font-size: 1.1rem; font-weight: 700; }
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1.3rem;
+    cursor: pointer;
+    opacity: 0.4;
+    line-height: 1;
+    padding: 2px 6px;
+    transition: opacity 0.15s;
+  }
+  .modal-close:hover { opacity: 0.9; }
+
+  /* ── RESULTS TABLE ───────────────────────────── */
+  .modal-wide { max-width: min(96vw, 1500px); width: 96vw; }
+
+  .table-scroll { overflow-x: auto; }
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    table-layout: auto;
+  }
+  .results-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--surface2);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    min-width: 100px;
+  }
+  .results-table th:first-child { min-width: 120px; }
+  .results-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .results-table tr:last-child td { border-bottom: none; }
+  .chip {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .no-result { opacity: 0.28; font-size: 0.8rem; }
+
+  .empty-results { color: var(--muted); font-size: 0.85rem; padding: 16px 0; }
+
+  /* ── CONFIG MODAL ────────────────────────────── */
+  .cfg-section { margin-bottom: 24px; }
+  .cfg-section h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin-bottom: 10px; }
+  .cfg-note { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; }
+
+  .palette { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .swatch-wrap {
+    width: 34px; height: 34px; border-radius: 50%;
+    position: relative; overflow: hidden; cursor: pointer;
+    outline: 2px solid rgba(255,255,255,0.15); outline-offset: 2px;
+    flex-shrink: 0;
+  }
+  .swatch-wrap input[type="color"] {
+    position: absolute; inset: -4px;
+    width: calc(100% + 8px); height: calc(100% + 8px);
+    border: none; padding: 0; cursor: pointer;
+    opacity: 0;
+  }
+
+  .sp-block { border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .sp-block-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .sp-num { font-size: 0.72rem; color: var(--muted); min-width: 18px; }
+  .sp-title-input {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 5px 10px; border-radius: 6px;
+    font-size: 0.88rem; font-weight: 700; font-family: var(--font); flex: 1;
+  }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px 10px; font-size: 0.75rem;
+  }
+  .pill-x {
+    background: none; border: none; color: #e74c3c; cursor: pointer;
+    font-size: 1rem; line-height: 1; padding: 0 1px; display: flex;
+  }
+  .add-row { display: flex; gap: 6px; }
+  .add-input {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 5px 10px; border-radius: 6px;
+    font-size: 0.8rem; font-family: var(--font); flex: 1;
+  }
+  .add-input::placeholder, .sp-title-input::placeholder { color: var(--muted); }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .cfg-footer { display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  /* ── FONT PICKER ─────────────────────────────── */
+  .font-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .font-opt {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1.3;
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .font-opt:hover { border-color: rgba(232,69,30,0.35); background: var(--surface2); }
+  .font-opt.active { border-color: var(--accent); background: rgba(232,69,30,0.07); }
+
+  /* ── SHAKE ANIMATION ─────────────────────────── */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+  }
+  .shake { animation: shake 0.38s ease; }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ───────────────────────────────────── -->
+<header class="header">
+  <h1 id="page-title">Working With Constraints</h1>
+  <div class="header-right">
+    <button class="btn btn-green" id="results-btn">&#x25A3; Show Results</button>
+    <button class="btn btn-ghost" id="reset-all-btn">&#8635; Reset Session</button>
+    <button class="btn btn-ghost" id="config-btn">&#9881; Configure</button>
+  </div>
+</header>
+
+<!-- ── SESSION BAR ──────────────────────────────── -->
+<div class="session-bar">
+  <span class="session-label">Session:</span>
+  <div class="session-tabs" id="session-tabs"></div>
+  <div class="session-bar-right">
+    <div id="new-team-form" style="display:none;align-items:center;gap:5px">
+      <input id="new-team-input" type="text" placeholder="Team name…"
+             style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.78rem;font-family:var(--font);background:white;color:var(--text);width:120px">
+      <button class="btn btn-accent btn-sm" id="new-team-confirm">Add</button>
+      <button class="btn btn-ghost btn-sm" id="new-team-cancel">✕</button>
+    </div>
+    <button class="btn btn-outline btn-sm" id="add-session-btn">+ New Team</button>
+    <button class="btn btn-outline btn-sm" id="reset-session-btn">&#8635; Reset</button>
+  </div>
+</div>
+
+<!-- ── MAIN ─────────────────────────────────────── -->
+<main class="main">
+  <div class="spin-all-row">
+    <button class="btn btn-accent" id="spin-all-btn">&#9676; Spin All</button>
+  </div>
+  <div class="spinners-grid" id="spinners-grid"></div>
+</main>
+
+<!-- ── RESULTS MODAL ────────────────────────────── -->
+<div class="overlay hidden" id="results-overlay">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h2>Session Results</h2>
+      <button class="modal-close" id="results-close">&#10005;</button>
+    </div>
+    <div id="results-body"></div>
+  </div>
+</div>
+
+<!-- ── CONFIG MODAL ─────────────────────────────── -->
+<div class="overlay hidden" id="config-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Configure Activity</h2>
+      <button class="modal-close" id="config-close">&#10005;</button>
+    </div>
+
+    <div class="cfg-section">
+      <h3>Font</h3>
+      <p class="cfg-note">Each option is shown in its own typeface. Click to preview live.</p>
+      <div class="font-grid" id="cfg-font-picker"></div>
+    </div>
+
+    <div class="cfg-section">
+      <h3>Background Colour</h3>
+      <p class="cfg-note">Sets the page background — choose white, a light tint, or match your brand.</p>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+        <div class="swatch-wrap" id="bg-swatch-wrap" style="background:#ffffff">
+          <input type="color" id="cfg-bg-color" value="#ffffff">
+        </div>
+        <span id="bg-color-label" style="font-size:0.8rem;color:var(--muted)">#ffffff</span>
+        <button class="btn btn-outline btn-sm" id="bg-reset-white">Reset to white</button>
+      </div>
+    </div>
+
+    <div class="cfg-section">
+      <h3>Brand Colours</h3>
+      <p class="cfg-note">Click any swatch to change it. Colours cycle across spinner segments.</p>
+      <div class="palette" id="cfg-palette"></div>
+    </div>
+
+    <div class="cfg-section">
+      <h3>Spinners — Titles &amp; Entries</h3>
+      <p class="cfg-note">Double-click any entry pill to edit it. Press Enter or click + Add to add new entries.</p>
+      <div id="cfg-spinners"></div>
+    </div>
+
+    <div class="cfg-footer">
+      <button class="btn btn-accent" id="cfg-save">Save &amp; Apply</button>
+      <button class="btn btn-ghost" id="cfg-defaults">Reset to Defaults</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// DEFAULT CONFIGURATION
+// ════════════════════════════════════════════════
+
+const FONT_OPTIONS = [
+  { key: "system",      name: "System Default",    family: "'Segoe UI', system-ui, -apple-system, sans-serif", url: null },
+  { key: "inter",       name: "Inter",             family: "'Inter', sans-serif",              url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" },
+  { key: "poppins",     name: "Poppins",           family: "'Poppins', sans-serif",            url: "https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" },
+  { key: "montserrat",  name: "Montserrat",        family: "'Montserrat', sans-serif",         url: "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" },
+  { key: "raleway",     name: "Raleway",           family: "'Raleway', sans-serif",            url: "https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700&display=swap" },
+  { key: "dm-sans",     name: "DM Sans",           family: "'DM Sans', sans-serif",            url: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" },
+  { key: "lato",        name: "Lato",              family: "'Lato', sans-serif",               url: "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" },
+  { key: "playfair",    name: "Playfair Display",  family: "'Playfair Display', serif",        url: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" },
+  { key: "merriweather",name: "Merriweather",      family: "'Merriweather', serif",            url: "https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" },
+];
+
+const DEFAULTS = {
+  title: "Working With Constraints",
+  bgColor: "#ffffff",
+  font: "system",
+  colors: [
+    "#C0392B", "#2471A3", "#1E8449", "#D68910",
+    "#7D3C98", "#CA6F1E", "#148F77", "#943126", "#1A5276"
+  ],
+  spinners: [
+    { title: "Time",        entries: ["2 hours","1 day","1 week","1 month","3 months","6 months"] },
+    { title: "Budget",      entries: ["£0","£500","£2,000","£5,000","£20,000","£100k+"] },
+    { title: "Location",    entries: ["Online","Studio","Public gallery","Outdoors","Community hall","Major venue"] },
+    { title: "Team Size",   entries: ["Solo","Pair","5 people","10 people","20 people","Large org"] },
+    { title: "Format",      entries: ["Performance","Exhibition","Workshop","Installation","Film / AV","Publication"] },
+    { title: "Audience",    entries: ["Children","Young people","Professionals","General public","Specialists","Mixed ages"] },
+    { title: "Resources",   entries: ["Nothing","Basic tools","Digital only","Full workshop","Outdoor kit","Unlimited"] },
+    { title: "Collaborator",entries: ["None","Local artist","Scientist","Business","Community group","International"] },
+    { title: "Wild Card",   entries: ["No technology","No words","One colour only","Silence","Found objects","Unexpected space"] }
+  ]
+};
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+
+let cfg = deepClone(DEFAULTS);
+let sessions = [];
+let activeId = null;
+let wheels = [];
+
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+function loadState() {
+  try { const s = localStorage.getItem("wc_cfg");  if (s) cfg      = JSON.parse(s); } catch {}
+  try { const s = localStorage.getItem("wc_sess"); if (s) sessions = JSON.parse(s); } catch {}
+  if (!sessions.length) sessions = [newSession("Team 1")];
+  activeId = sessions[0].id;
+}
+
+function persist() {
+  try {
+    localStorage.setItem("wc_cfg",  JSON.stringify(cfg));
+    localStorage.setItem("wc_sess", JSON.stringify(sessions));
+  } catch (_) {}
+}
+
+function newSession(name) {
+  return { id: "s" + Date.now() + Math.random().toString(36).slice(2), name, results: {} };
+}
+
+function active() { return sessions.find(s => s.id === activeId) || sessions[0]; }
+
+// ════════════════════════════════════════════════
+// AUDIO
+// ════════════════════════════════════════════════
+
+let _audioCtx = null;
+
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === "suspended") _audioCtx.resume();
+  return _audioCtx;
+}
+
+function playClick() {
+  try {
+    const ctx  = getAudioCtx();
+    const now  = ctx.currentTime;
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(1300, now);
+    osc.frequency.exponentialRampToValueAtTime(650, now + 0.014);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.16, now + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.022);
+    osc.start(now);
+    osc.stop(now + 0.025);
+  } catch (_) {}
+}
+
+// ════════════════════════════════════════════════
+// SPINNER WHEEL
+// ════════════════════════════════════════════════
+
+const SIZE = 400;
+
+class SpinnerWheel {
+  constructor(canvas, idx) {
+    this.canvas = canvas;
+    this.idx    = idx;
+    this.rot    = 0;
+    this.going  = false;
+    this._setupCanvas();
+    this.draw();
+  }
+
+  _setupCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    this.canvas.width  = SIZE * dpr;
+    this.canvas.height = SIZE * dpr;
+    this.ctx = this.canvas.getContext("2d");
+    this.ctx.scale(dpr, dpr);
+    this.dpr = dpr;
+  }
+
+  redraw() {
+    const dpr = window.devicePixelRatio || 1;
+    if (dpr !== this.dpr) {
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      this.canvas.width  = SIZE * dpr;
+      this.canvas.height = SIZE * dpr;
+      this.ctx.scale(dpr, dpr);
+      this.dpr = dpr;
+    }
+    this.draw();
+  }
+
+  draw() {
+    const ctx = this.ctx;
+    const cx  = SIZE / 2;
+    const cy  = SIZE / 2;
+    const r   = SIZE / 2 - 10;
+    const sp  = cfg.spinners[this.idx];
+    const n   = sp.entries.length;
+    const seg = (2 * Math.PI) / n;
+
+    ctx.clearRect(0, 0, SIZE, SIZE);
+
+    for (let i = 0; i < n; i++) {
+      const a0   = -Math.PI / 2 + this.rot + i * seg;
+      const a1   = a0 + seg;
+      const midA = a0 + seg / 2;
+      const col  = cfg.colors[i % cfg.colors.length];
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, a0, a1);
+      ctx.closePath();
+      ctx.fillStyle = col;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + r * Math.cos(a0), cy + r * Math.sin(a0));
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      const label      = sp.entries[i];
+      const maxRadialW = r - 18;
+      const fontFamily = (FONT_OPTIONS.find(f => f.key === (cfg.font || "system")) || FONT_OPTIONS[0]).family;
+      const angularRoom = (r * 0.65) * 2 * Math.sin(seg / 2);
+      let fontSize = Math.min(17, Math.floor(angularRoom * 0.42));
+      fontSize = Math.max(fontSize, 9);
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(midA);
+      ctx.textAlign    = "right";
+      ctx.textBaseline = "middle";
+      ctx.font = `bold ${fontSize}px ${fontFamily}`;
+      while (fontSize > 9 && ctx.measureText(label).width > maxRadialW) {
+        fontSize--;
+        ctx.font = `bold ${fontSize}px ${fontFamily}`;
+      }
+      ctx.fillStyle   = "rgba(255,255,255,0.95)";
+      ctx.shadowColor = "rgba(0,0,0,0.55)";
+      ctx.shadowBlur  = 3;
+      ctx.fillText(label, r - 7, 0);
+      ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 9, 0, 2 * Math.PI);
+    ctx.fillStyle = "#1a1a2e";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.45)";
+    ctx.shadowBlur  = 4;
+    ctx.fillStyle   = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(cx - 8, 1);
+    ctx.lineTo(cx + 8, 1);
+    ctx.lineTo(cx, 16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  spin(onDone) {
+    if (this.going) return;
+    this.going = true;
+
+    const start      = this.rot;
+    const extraSpins = (4 + Math.floor(Math.random() * 5)) * 2 * Math.PI;
+    const finalPos   = Math.random() * 2 * Math.PI;
+    const total      = extraSpins + finalPos;
+    const duration   = 3200 + Math.random() * 2400;
+    const t0         = performance.now();
+    let   lastSeg    = this._segmentIdx(this.rot);
+
+    const tick = (now) => {
+      const p      = Math.min((now - t0) / duration, 1);
+      const eased  = 1 - Math.pow(1 - p, 4);
+      this.rot     = start + total * eased;
+      this.draw();
+
+      if (p < 1) {
+        const curSeg = this._segmentIdx(this.rot);
+        if (curSeg !== lastSeg) { playClick(); lastSeg = curSeg; }
+        requestAnimationFrame(tick);
+      } else {
+        this.going = false;
+        onDone && onDone(this.result());
+      }
+    };
+    requestAnimationFrame(tick);
+  }
+
+  _segmentIdx(rot) {
+    const n   = cfg.spinners[this.idx].entries.length;
+    const seg = (2 * Math.PI) / n;
+    let a = (-rot) % (2 * Math.PI);
+    if (a < 0) a += 2 * Math.PI;
+    if (a >= 2 * Math.PI) a = 0;
+    return Math.min(Math.floor(a / seg), n - 1);
+  }
+
+  result() {
+    return cfg.spinners[this.idx].entries[this._segmentIdx(this.rot)];
+  }
+}
+
+// ════════════════════════════════════════════════
+// RENDER: SESSION TABS
+// ════════════════════════════════════════════════
+
+function renderTabs() {
+  const el = document.getElementById("session-tabs");
+  el.innerHTML = sessions.map(s =>
+    `<button class="session-tab${s.id === activeId ? " active" : ""}" data-id="${s.id}">
+       <span class="tab-name">${esc(s.name)}</span>
+       <span class="tab-rename-btn" title="Rename team">✏</span>
+     </button>`
+  ).join("");
+
+  el.querySelectorAll(".session-tab").forEach(btn => {
+    btn.addEventListener("click", e => {
+      if (e.target.closest(".tab-rename-btn")) return; // handled separately
+      activeId = btn.dataset.id;
+      renderTabs();
+      renderSpinners();
+    });
+
+    const startRename = () => {
+      const s = sessions.find(x => x.id === btn.dataset.id);
+      if (!s) return;
+      const nameSpan = btn.querySelector(".tab-name");
+      const prev = s.name;
+      nameSpan.contentEditable = "true";
+      nameSpan.focus();
+      document.execCommand("selectAll", false, null);
+      const finish = () => {
+        nameSpan.contentEditable = "false";
+        const val = nameSpan.textContent.trim();
+        s.name = val || prev;
+        nameSpan.textContent = s.name;
+        persist();
+      };
+      nameSpan.addEventListener("blur",    finish, { once: true });
+      nameSpan.addEventListener("keydown", e => {
+        if (e.key === "Enter")  { e.preventDefault(); nameSpan.blur(); }
+        if (e.key === "Escape") { nameSpan.textContent = prev; nameSpan.blur(); }
+      }, { once: true });
+    };
+
+    btn.querySelector(".tab-rename-btn").addEventListener("click", e => {
+      e.stopPropagation();
+      activeId = btn.dataset.id;
+      renderTabs();
+      // Re-query after re-render
+      const newBtn = el.querySelector(`.session-tab[data-id="${activeId}"]`);
+      const nameSpan = newBtn && newBtn.querySelector(".tab-name");
+      if (!nameSpan) return;
+      const s = sessions.find(x => x.id === activeId);
+      const prev = s.name;
+      nameSpan.contentEditable = "true";
+      nameSpan.focus();
+      document.execCommand("selectAll", false, null);
+      const finish = () => {
+        nameSpan.contentEditable = "false";
+        const val = nameSpan.textContent.trim();
+        s.name = val || prev;
+        nameSpan.textContent = s.name;
+        persist();
+      };
+      nameSpan.addEventListener("blur",    finish, { once: true });
+      nameSpan.addEventListener("keydown", ev => {
+        if (ev.key === "Enter")  { ev.preventDefault(); nameSpan.blur(); }
+        if (ev.key === "Escape") { nameSpan.textContent = prev; nameSpan.blur(); }
+      }, { once: true });
+    });
+
+    btn.addEventListener("dblclick", startRename);
+  });
+}
+
+// ════════════════════════════════════════════════
+// RENDER: SPINNER GRID
+// ════════════════════════════════════════════════
+
+function renderSpinners() {
+  const grid = document.getElementById("spinners-grid");
+  const sess = active();
+  wheels = [];
+
+  grid.innerHTML = cfg.spinners.map((sp, i) => {
+    const res = sess.results[i];
+    return `
+      <div class="spinner-card${res ? " done" : ""}" id="card-${i}">
+        <div class="spinner-title">${esc(sp.title)}</div>
+        <div class="canvas-wrap">
+          <canvas id="cv-${i}" width="${SIZE}" height="${SIZE}" style="width:${SIZE}px;height:${SIZE}px"></canvas>
+        </div>
+        <div class="result-box${res ? " done" : ""}" id="res-${i}">${res ? esc(res) : "–"}</div>
+        <button class="btn btn-accent btn-sm spin-btn" data-i="${i}">Spin</button>
+      </div>`;
+  }).join("");
+
+  cfg.spinners.forEach((_, i) => {
+    const cv = document.getElementById(`cv-${i}`);
+    wheels.push(new SpinnerWheel(cv, i));
+  });
+
+  grid.querySelectorAll(".spin-btn").forEach(btn =>
+    btn.addEventListener("click", () => doSpin(+btn.dataset.i))
+  );
+}
+
+function doSpin(i) {
+  const w   = wheels[i];
+  const btn = document.querySelector(`.spin-btn[data-i="${i}"]`);
+  if (!w || w.going) return;
+  if (btn) { btn.disabled = true; btn.textContent = "…"; }
+
+  w.spin(val => {
+    const resEl  = document.getElementById("res-"  + i);
+    const cardEl = document.getElementById("card-" + i);
+    if (resEl)  { resEl.textContent = val; resEl.className  = "result-box done"; }
+    if (cardEl) cardEl.className = "spinner-card done";
+    if (btn)    { btn.disabled = false; btn.textContent = "Spin"; }
+    active().results[i] = val;
+    persist();
+  });
+}
+
+// ════════════════════════════════════════════════
+// RENDER: RESULTS
+// ════════════════════════════════════════════════
+
+function renderResults() {
+  const el     = document.getElementById("results-body");
+  const colors = cfg.colors;
+  const titles = cfg.spinners.map(s => s.title);
+
+  const anyResults = sessions.some(s => Object.keys(s.results).length > 0);
+  if (!anyResults) {
+    el.innerHTML = `<p class="empty-results">No results yet — spin some wheels first!</p>`;
+    return;
+  }
+
+  const html = `<div class="table-scroll"><table class="results-table">
+    <thead><tr>
+      <th>Team / Session</th>
+      ${titles.map((t, i) => `<th style="color:${colors[i % colors.length]}">${esc(t)}</th>`).join("")}
+    </tr></thead>
+    <tbody>
+      ${sessions.map(sess => `
+        <tr>
+          <td><strong>${esc(sess.name)}</strong></td>
+          ${cfg.spinners.map((_, i) => {
+            const r = sess.results[i];
+            const c = colors[i % colors.length];
+            return `<td>${r
+              ? `<span class="chip" style="background:${c}22;border:1px solid ${c}60;color:${c}">${esc(r)}</span>`
+              : `<span class="no-result">—</span>`}</td>`;
+          }).join("")}
+        </tr>`).join("")}
+    </tbody>
+  </table></div>`;
+
+  el.innerHTML = html;
+}
+
+// ════════════════════════════════════════════════
+// CONFIG UI
+// ════════════════════════════════════════════════
+
+let editCfg = null;
+
+function applyBgColor(color) { document.body.style.background = color; }
+
+function applyFont(key) {
+  const opt = FONT_OPTIONS.find(f => f.key === key) || FONT_OPTIONS[0];
+  if (opt.url) {
+    const id = "gfont-" + opt.key;
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id; link.rel = "stylesheet"; link.href = opt.url;
+      document.head.appendChild(link);
+    }
+  }
+  document.documentElement.style.setProperty("--font", opt.family);
+}
+
+function openConfig() {
+  editCfg = deepClone(cfg);
+
+  const fontGrid = document.getElementById("cfg-font-picker");
+  fontGrid.innerHTML = FONT_OPTIONS.map(opt =>
+    `<button class="font-opt${editCfg.font === opt.key ? " active" : ""}"
+             data-key="${opt.key}"
+             style="font-family:${opt.family}">${opt.name}</button>`
+  ).join("");
+  FONT_OPTIONS.filter(f => f.url).forEach(f => {
+    const id = "gfont-" + f.key;
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id; link.rel = "stylesheet"; link.href = f.url;
+      document.head.appendChild(link);
+    }
+  });
+  fontGrid.querySelectorAll(".font-opt").forEach(btn => {
+    btn.addEventListener("click", () => {
+      fontGrid.querySelectorAll(".font-opt").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      editCfg.font = btn.dataset.key;
+      applyFont(editCfg.font);
+    });
+  });
+
+  const bgInput = document.getElementById("cfg-bg-color");
+  const bgWrap  = document.getElementById("bg-swatch-wrap");
+  const bgLabel = document.getElementById("bg-color-label");
+  bgInput.value = editCfg.bgColor || "#ffffff";
+  bgWrap.style.background = bgInput.value;
+  bgLabel.textContent = bgInput.value;
+
+  bgInput.addEventListener("input", e => {
+    editCfg.bgColor = e.target.value;
+    bgWrap.style.background = e.target.value;
+    bgLabel.textContent = e.target.value;
+    applyBgColor(e.target.value);
+  });
+
+  document.getElementById("bg-reset-white").onclick = () => {
+    editCfg.bgColor = "#ffffff";
+    bgInput.value = "#ffffff";
+    bgWrap.style.background = "#ffffff";
+    bgLabel.textContent = "#ffffff";
+    applyBgColor("#ffffff");
+  };
+
+  buildPalette();
+  buildSpinnersCfg();
+  document.getElementById("config-overlay").classList.remove("hidden");
+}
+
+function buildPalette() {
+  const el = document.getElementById("cfg-palette");
+  el.innerHTML = editCfg.colors.map((c, i) => `
+    <div class="swatch-wrap" style="background:${c}" title="Click to change">
+      <input type="color" value="${c}" data-ci="${i}">
+    </div>`).join("") +
+    `<button class="btn btn-outline btn-sm" id="pal-add">+ Add</button>
+     <button class="btn btn-outline btn-sm" id="pal-rem">− Remove</button>`;
+
+  el.querySelectorAll("input[type=color]").forEach(inp => {
+    inp.addEventListener("input", e => {
+      editCfg.colors[+e.target.dataset.ci] = e.target.value;
+      e.target.parentElement.style.background = e.target.value;
+    });
+  });
+  document.getElementById("pal-add").onclick = () => { editCfg.colors.push("#888888"); buildPalette(); };
+  document.getElementById("pal-rem").onclick = () => {
+    if (editCfg.colors.length > 2) { editCfg.colors.pop(); buildPalette(); }
+  };
+}
+
+function buildSpinnersCfg() {
+  const el = document.getElementById("cfg-spinners");
+  el.innerHTML = editCfg.spinners.map((sp, si) => `
+    <div class="sp-block">
+      <div class="sp-block-head">
+        <span class="sp-num">${si + 1}</span>
+        <input class="sp-title-input" data-si="${si}" value="${esc(sp.title)}" placeholder="Spinner title">
+      </div>
+      <div class="pills" id="pills-${si}">
+        ${sp.entries.map((e, ei) => `
+          <div class="pill">
+            <span class="pill-lbl" data-si="${si}" data-ei="${ei}">${esc(e)}</span>
+            <button class="pill-x" data-si="${si}" data-ei="${ei}">×</button>
+          </div>`).join("")}
+      </div>
+      <div class="add-row">
+        <input class="add-input" id="ne-${si}" placeholder="New entry… (Enter to add)">
+        <button class="btn btn-ghost btn-sm" data-add="${si}">+ Add</button>
+      </div>
+    </div>`).join("");
+
+  el.querySelectorAll(".sp-title-input").forEach(inp =>
+    inp.addEventListener("change", e => {
+      editCfg.spinners[+e.target.dataset.si].title = e.target.value.trim() || editCfg.spinners[+e.target.dataset.si].title;
+    })
+  );
+
+  el.querySelectorAll(".pill-x").forEach(btn =>
+    btn.addEventListener("click", e => {
+      const si = +e.target.dataset.si, ei = +e.target.dataset.ei;
+      if (editCfg.spinners[si].entries.length <= 2) {
+        const pill = e.target.closest(".pill");
+        pill.classList.add("shake");
+        setTimeout(() => pill.classList.remove("shake"), 400);
+        return;
+      }
+      editCfg.spinners[si].entries.splice(ei, 1);
+      buildSpinnersCfg();
+    })
+  );
+
+  // Double-click pill label to edit inline
+  el.querySelectorAll(".pill-lbl").forEach(lbl =>
+    lbl.addEventListener("dblclick", e => {
+      const si = +e.target.dataset.si, ei = +e.target.dataset.ei;
+      const prev = lbl.textContent;
+      lbl.contentEditable = "true";
+      lbl.focus();
+      document.execCommand("selectAll", false, null);
+      const finish = () => {
+        lbl.contentEditable = "false";
+        const val = lbl.textContent.trim();
+        if (val) { editCfg.spinners[si].entries[ei] = val; }
+        else { lbl.textContent = prev; }
+      };
+      lbl.addEventListener("blur",    finish, { once: true });
+      lbl.addEventListener("keydown", e2 => {
+        if (e2.key === "Enter")  { e2.preventDefault(); lbl.blur(); }
+        if (e2.key === "Escape") { lbl.textContent = prev; lbl.blur(); }
+      }, { once: true });
+    })
+  );
+
+  el.querySelectorAll("[data-add]").forEach(btn =>
+    btn.addEventListener("click", () => addEntry(+btn.dataset.add))
+  );
+  el.querySelectorAll(".add-input").forEach(inp =>
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter") addEntry(+inp.id.replace("ne-", ""));
+    })
+  );
+}
+
+function addEntry(si) {
+  const inp = document.getElementById(`ne-${si}`);
+  const val = inp.value.trim();
+  if (!val) return;
+  editCfg.spinners[si].entries.push(val);
+  inp.value = "";
+  buildSpinnersCfg();
+}
+
+function saveConfig() {
+  cfg = deepClone(editCfg);
+  persist();
+  document.getElementById("page-title").textContent = cfg.title;
+  applyBgColor(cfg.bgColor || "#ffffff");
+  applyFont(cfg.font || "system");
+  document.getElementById("config-overlay").classList.add("hidden");
+  renderSpinners();
+}
+
+// ════════════════════════════════════════════════
+// HELPER
+// ════════════════════════════════════════════════
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+// ════════════════════════════════════════════════
+// EVENT WIRING
+// ════════════════════════════════════════════════
+
+// New team inline form
+function showNewTeamForm() {
+  const form  = document.getElementById("new-team-form");
+  const input = document.getElementById("new-team-input");
+  input.value = `Team ${sessions.length + 1}`;
+  form.style.display = "flex";
+  input.focus();
+  input.select();
+}
+
+function hideNewTeamForm() {
+  document.getElementById("new-team-form").style.display = "none";
+}
+
+function commitNewTeam() {
+  const input = document.getElementById("new-team-input");
+  const name  = input.value.trim();
+  if (!name) { hideNewTeamForm(); return; }
+  const s = newSession(name);
+  sessions.push(s);
+  activeId = s.id;
+  persist();
+  renderTabs();
+  renderSpinners();
+  hideNewTeamForm();
+}
+
+document.getElementById("add-session-btn").addEventListener("click", showNewTeamForm);
+document.getElementById("new-team-confirm").addEventListener("click", commitNewTeam);
+document.getElementById("new-team-cancel").addEventListener("click", hideNewTeamForm);
+document.getElementById("new-team-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") commitNewTeam();
+  if (e.key === "Escape") hideNewTeamForm();
+});
+
+// Reset current team's results
+document.getElementById("reset-session-btn").addEventListener("click", () => {
+  active().results = {};
+  persist();
+  renderSpinners();
+});
+
+// Reset entire session — wipe all teams, start fresh with Team 1
+document.getElementById("reset-all-btn").addEventListener("click", () => {
+  sessions = [newSession("Team 1")];
+  activeId = sessions[0].id;
+  persist();
+  renderTabs();
+  renderSpinners();
+});
+
+// Spin all
+document.getElementById("spin-all-btn").addEventListener("click", () => {
+  cfg.spinners.forEach((_, i) => setTimeout(() => doSpin(i), i * 180));
+});
+
+// Results modal
+document.getElementById("results-btn").addEventListener("click", () => {
+  renderResults();
+  document.getElementById("results-overlay").classList.remove("hidden");
+});
+document.getElementById("results-close").addEventListener("click", () =>
+  document.getElementById("results-overlay").classList.add("hidden")
+);
+document.getElementById("results-overlay").addEventListener("click", e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.add("hidden");
+});
+
+// Config modal
+document.getElementById("config-btn").addEventListener("click", openConfig);
+document.getElementById("config-close").addEventListener("click", () =>
+  document.getElementById("config-overlay").classList.add("hidden")
+);
+document.getElementById("config-overlay").addEventListener("click", e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.add("hidden");
+});
+document.getElementById("cfg-save").addEventListener("click", saveConfig);
+
+// Two-click "Reset to Defaults"
+let defaultsConfirming = false;
+let defaultsTimer = null;
+
+document.getElementById("cfg-defaults").addEventListener("click", () => {
+  const btn = document.getElementById("cfg-defaults");
+  if (!defaultsConfirming) {
+    defaultsConfirming = true;
+    btn.textContent = "Confirm Reset?";
+    btn.classList.remove("btn-ghost");
+    btn.classList.add("btn-danger");
+    defaultsTimer = setTimeout(() => {
+      defaultsConfirming = false;
+      btn.textContent = "Reset to Defaults";
+      btn.classList.remove("btn-danger");
+      btn.classList.add("btn-ghost");
+    }, 3000);
+  } else {
+    clearTimeout(defaultsTimer);
+    defaultsConfirming = false;
+    btn.textContent = "Reset to Defaults";
+    btn.classList.remove("btn-danger");
+    btn.classList.add("btn-ghost");
+    editCfg = deepClone(DEFAULTS);
+    buildPalette();
+    buildSpinnersCfg();
+    applyBgColor(DEFAULTS.bgColor);
+    applyFont(DEFAULTS.font);
+    document.getElementById("cfg-font-picker").querySelectorAll(".font-opt").forEach(b => {
+      b.classList.toggle("active", b.dataset.key === DEFAULTS.font);
+    });
+  }
+});
+
+// Redraw on resize
+window.addEventListener("resize", () => wheels.forEach(w => w.redraw()));
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+
+loadState();
+document.getElementById("page-title").textContent = cfg.title;
+applyBgColor(cfg.bgColor || "#ffffff");
+applyFont(cfg.font || "system");
+renderTabs();
+renderSpinners();
+</script>
+</body>
+</html>
