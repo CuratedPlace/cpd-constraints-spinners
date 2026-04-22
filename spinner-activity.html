@@ -37,6 +37,8 @@
     justify-content: space-between;
     gap: 12px;
   }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-logo { height: 32px; width: auto; display: block; }
   .header h1 {
     font-size: 1.05rem;
     font-weight: 700;
@@ -347,7 +349,12 @@
 
 <!-- ── HEADER ───────────────────────────────────── -->
 <header class="header">
-  <h1 id="page-title">Working With Constraints</h1>
+  <div class="header-left">
+    <a href="https://www.curatedplace.com" target="_blank" rel="noopener">
+      <img src="./logo.png" alt="Curated Place" class="header-logo">
+    </a>
+    <h1 id="page-title">Working With Constraints</h1>
+  </div>
   <div class="header-right">
     <button class="btn btn-green" id="results-btn">&#x25A3; Show Results</button>
     <button class="btn btn-ghost" id="reset-all-btn">&#8635; Reset Session</button>
