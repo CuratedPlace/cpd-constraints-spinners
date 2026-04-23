@@ -1307,6 +1307,20 @@ document.getElementById("cfg-defaults").addEventListener("click", () => {
 // Redraw on resize
 window.addEventListener("resize", () => wheels.forEach(w => w.redraw()));
 
+// ── IFRAME AUTO-RESIZE (postMessage to parent) ────
+function emitHeight() {
+  if (window.parent !== window) {
+    window.parent.postMessage(
+      { type: "iframeResize", height: document.documentElement.scrollHeight },
+      "*"
+    );
+  }
+}
+if (window.ResizeObserver) {
+  new ResizeObserver(emitHeight).observe(document.body);
+}
+window.addEventListener("load", emitHeight);
+
 // ════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════
