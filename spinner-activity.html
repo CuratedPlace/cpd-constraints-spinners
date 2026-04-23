@@ -158,8 +158,8 @@
     letter-spacing: 0.02em;
   }
   .canvas-wrap {
-    width: 260px;
-    height: 260px;
+    width: 340px;
+    height: 340px;
     position: relative;
     flex-shrink: 0;
   }
@@ -479,15 +479,15 @@ const DEFAULTS = {
     "#7D3C98", "#CA6F1E", "#148F77", "#943126", "#1A5276"
   ],
   spinners: [
-    { title: "Time",        entries: ["2 hours","1 day","1 week","1 month","3 months","6 months"] },
-    { title: "Budget",      entries: ["£0","£500","£2,000","£5,000","£20,000","£100k+"] },
-    { title: "Location",    entries: ["Online","Studio","Public gallery","Outdoors","Community hall","Major venue"] },
-    { title: "Team Size",   entries: ["Solo","Pair","5 people","10 people","20 people","Large org"] },
-    { title: "Format",      entries: ["Performance","Exhibition","Workshop","Installation","Film / AV","Publication"] },
-    { title: "Audience",    entries: ["Children","Young people","Professionals","General public","Specialists","Mixed ages"] },
-    { title: "Resources",   entries: ["Nothing","Basic tools","Digital only","Full workshop","Outdoor kit","Unlimited"] },
-    { title: "Collaborator",entries: ["None","Local artist","Scientist","Business","Community group","International"] },
-    { title: "Wild Card",   entries: ["No technology","No words","One colour only","Silence","Found objects","Unexpected space"] }
+    { title: "Place",                entries: ["Capital City","Second City","Large Town","Small Town","Village"] },
+    { title: "Location",             entries: ["Rooftop","Stadium","Town Hall","Square","Park","Woodland","Gallery","Swimming Pool","Restaurant","Bar","College"] },
+    { title: "Duration",             entries: ["One Day","Week","Weekend","Month","All Year","Every Sunday","30 Minutes","4 Hours","An Evening"] },
+    { title: "Number of Performers", entries: ["1","2","5","10","100","1000","5000"] },
+    { title: "Artist Type",          entries: ["Ventriloquists","Mimes","Poets","Painters","Dancers","Bands","DJs","Sound Artists","Actors","Street Performers","Magicians","Writers","Classical Musicians","Comicbook Artists","Percussionists","Fashion Designers"] },
+    { title: "Genre",                entries: ["Horror","Folk","Sci-Fi","Traditional","Club","Experimental","Romance","Melodrama","Surreal","Historic","Religious"] },
+    { title: "Audience Capacity",    entries: ["1","2","5","10","100","1000","5000","Everyone in Town","Everyone in the Country"] },
+    { title: "Audience Type",        entries: ["School Kids","Politicians","People Over 60","18-24 Year Olds","Young Families","Parents with Babies","Clubbers","Students","Ex Offenders","30-45 Year Olds","Farmers","Tourists","Local Businesses","Pensioners","Single People","Fitness Fanatics"] },
+    { title: "Ritual",               entries: ["Marriage","Birthday","Anniversary","Funeral","Coming of Age","Summer Fete","Winter Festival","Graduation","Memorial","Carnival","Celebration"] }
   ]
 };
 
@@ -557,7 +557,7 @@ function playClick() {
 // SPINNER WHEEL
 // ════════════════════════════════════════════════
 
-const SIZE = 260;
+const SIZE = 340;
 
 class SpinnerWheel {
   constructor(canvas, idx) {
@@ -625,8 +625,8 @@ class SpinnerWheel {
       const maxRadialW = r - 18;
       const fontFamily = (FONT_OPTIONS.find(f => f.key === (cfg.font || "system")) || FONT_OPTIONS[0]).family;
       const angularRoom = (r * 0.65) * 2 * Math.sin(seg / 2);
-      let fontSize = Math.min(17, Math.floor(angularRoom * 0.42));
-      fontSize = Math.max(fontSize, 9);
+      let fontSize = Math.min(13, Math.floor(angularRoom * 0.34));
+      fontSize = Math.max(fontSize, 8);
 
       ctx.save();
       ctx.translate(cx, cy);
