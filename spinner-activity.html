@@ -470,6 +470,8 @@ const FONT_OPTIONS = [
   { key: "merriweather",name: "Merriweather",      family: "'Merriweather', serif",            url: "https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" },
 ];
 
+const CONFIG_VERSION = 2;
+
 const DEFAULTS = {
   title: "Working With Constraints",
   bgColor: "#ffffff",
@@ -503,7 +505,21 @@ let wheels = [];
 function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 
 function loadState() {
-  try { const s = localStorage.getItem("wc_cfg");  if (s) cfg      = JSON.parse(s); } catch {}
+  try {
+    const s = localStorage.getItem("wc_cfg");
+    if (s) {
+      const saved = JSON.parse(s);
+      if (saved._version === CONFIG_VERSION) {
+        cfg = saved;
+      } else {
+        // New version — reset spinners to defaults, keep colours/font/bg if present
+        cfg = deepClone(DEFAULTS);
+        cfg._version = CONFIG_VERSION;
+      }
+    } else {
+      cfg._version = CONFIG_VERSION;
+    }
+  } catch {}
   try { const s = localStorage.getItem("wc_sess"); if (s) sessions = JSON.parse(s); } catch {}
   if (!sessions.length) sessions = [newSession("Team 1")];
   activeId = sessions[0].id;
@@ -626,7 +642,7 @@ class SpinnerWheel {
       const fontFamily = (FONT_OPTIONS.find(f => f.key === (cfg.font || "system")) || FONT_OPTIONS[0]).family;
       const angularRoom = (r * 0.65) * 2 * Math.sin(seg / 2);
       let fontSize = Math.min(13, Math.floor(angularRoom * 0.34));
-      fontSize = Math.max(fontSize, 8);
+      fontSize = Math.max(fontSize, 8); // reduced from defaults to fit longer labels
 
       ctx.save();
       ctx.translate(cx, cy);
